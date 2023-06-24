@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 #include <sys/fcntl.h>
 #include <unistd.h>
-#include "../http/HttpReqHandler.hpp"
+#include "../http/HttpreqHandler.hpp"
 #include "Event.hpp"
 
 
@@ -85,8 +85,8 @@ bool setLocationData(Event *e)
 		{
 			std::string ext = locationUri.substr(1);
 			// request가 ext로 끝나면
-			if (requestPath.find(ext) != std::string::npos &&
-					requestPath.find(ext) == requestPath.length() - ext.length())
+			if (requestPath.rfind(ext) != std::string::npos &&
+					requestPath.rfind(ext) == requestPath.length() - ext.length())
 			{
 				e->locationData = e->getDefaultServerData()->getLocationDatas().at(i);
 				return true;
@@ -153,8 +153,10 @@ void setInternalUri(Event *e)
 		return ;
 	}
 
-	std::cout<<"requestPath : "<<requestPath<<std::endl;
-	tmp = requestPath.substr(1);
+	if (requestPath == "")
+		tmp = "/";
+	else
+		tmp = requestPath.substr(1);
 	pos = tmp.find("/");
 
 	if (e->locationData->getUri() == "/")
@@ -257,6 +259,7 @@ void EventLoop::errorCallback(Event *e)
 	 * reqhandler에서 호출시 없을수도 있음.
 	 * */
 	if (!e->locationData)
+	{
 		ws_internalRedir(e);
 	if (e->setErrorPage())
 	{
@@ -290,14 +293,17 @@ void EventLoop::setHttpResponse(Event *e)
 	 * */
 	if (!checkAllowedMethods(e))
 	{
-		errorCallback(e);
-		return ;
-	}
-	if (!checkClientMaxBodySize(e))
-	{
+		e->setStatusCode(405);
 		errorCallback(e);
 		return;
 	}
+	if (!checkClientMaxBodySize(e))
+	{
+		e->setStatusCode(413);
+		errorCallback(e);
+		return;
+	}
+
 	/**
 	 * client's request is redirection.
 	 * */
@@ -313,7 +319,6 @@ void EventLoop::setHttpResponse(Event *e)
 	 * */
 	if (!e->locationData->getCgiPass().empty())
 	{
-		std::cout<<"processing cgi..."<<std::endl;
 		/**
 		 * process cgi
 		 * */

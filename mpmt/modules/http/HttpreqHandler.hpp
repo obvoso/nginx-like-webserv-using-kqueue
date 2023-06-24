@@ -3,8 +3,12 @@
 
 #include <iostream>
 #include <sstream>
-#include "../eventLoop/Event.hpp"
+#include <ostream>
+#include <algorithm>
+#include <stdexcept>
 #include "./HttpRequestInfo.hpp"
+#include "../eventLoop/Event.hpp"
+#include "../http/HttpServer.hpp"
 #include "../../interface/IHandler.hpp"
 #include "../../exceptions/httpException.hpp"
 
@@ -63,7 +67,6 @@ public:
 	std::string getSidString(void) const;
 	const httpRequestInfo &getRequestInfo(void) const;
 
-	void printReq(void);
 private:
 	//init
 	void initRequest(std::string req);
@@ -90,7 +93,7 @@ private:
 	void parseQueryParam(std::string line, int *prevPos, int *pos);
 
 	//chunked
-	void parseChunked(std::string req);
+	void parseChunked(void);
 	void splitChunked(void);
 	int parseChunkedLength(int *startPos);
 	std::string parseChunkedBody(int *startPos);

@@ -136,11 +136,7 @@ public:
 	struct stat statBuf;
 	int fileReadByte;
 	int fileWroteByte;
-	unsigned int sid;
-	std::string tmpOutFileName;
-	std::string tmpInFileName;
-	int tmpOutFile;
-	int tmpInFile;
+	int	childPid;
 
 
 public:

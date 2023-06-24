@@ -29,6 +29,11 @@ void HttpServer::init() throw(std::runtime_error)
 	}
 }
 
+unsigned int HttpServer::issueSessionId()
+{
+	return hash(static_cast<unsigned int>(time(NULL)));
+}
+
 std::vector<struct kevent> & HttpServer::getKevents() { return this->kevents; }
 
 unsigned int HttpServer::issueSessionId()

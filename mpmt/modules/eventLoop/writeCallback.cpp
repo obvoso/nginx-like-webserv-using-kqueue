@@ -1,6 +1,5 @@
 #include "Event.hpp"
 #include "EventLoop.hpp"
-#include <sys/errno.h>
 
 void EventLoop::writeCallback(struct kevent *e)
 {
@@ -23,7 +22,6 @@ void EventLoop::writeCallback(struct kevent *e)
 			e_tmpFileWriteCallback(e, e_udata);
 			break;
 		default:
-			std::cout<<"unknown event type"<<std::endl;
 			break;
 	}
 }
@@ -40,18 +38,8 @@ void EventLoop::e_clientSocketWriteCallback(struct kevent *e, Event *e_udata)
 		int wroteByte = write(e_udata->getClientFd(), static_cast<responseHandler *>(e_udata->getResponseHandler())->getResBuf().c_str() + e_udata->wrote, size - e_udata->wrote);
 		if (wroteByte == -1)
 		{
-			if (errno == EWOULDBLOCK || errno == EAGAIN)
-			{
-				std::cout<<"EWOULDBLOCK"<<std::endl;
-				return;
-			}
-			else
-			{
-				std::cout<<"write error"<<std::endl;
-				std::cout<<"errno : "<<errno<<std::endl;
-			}
+			return;
 		}
-
 		else
 		{
 			/**
@@ -63,7 +51,6 @@ void EventLoop::e_clientSocketWriteCallback(struct kevent *e, Event *e_udata)
 			e_udata->wrote += wroteByte; 
 			if (e_udata->wrote == size)
 			{
-				std::cout<<"wrote all the data"<<std::endl;
 				/**
 				 * if all the data wrote, unregister write event
 				 * */
@@ -100,17 +87,8 @@ void EventLoop::e_pipeWriteCallback(struct kevent *e, Event *e_udata)
 
 		if (wroteByte == -1)
 		{
-			if (errno == EAGAIN)
-			{
-				return;
-			}
-			else
-			{
-				std::cerr<<"UNKNOWN ERROR"<<std::endl;
-				std::cerr<<"Errno: "<<errno<<std::endl;
-				e_udata->setStatusCode(500);
-				unregisterPipeWriteEvent(e_udata);
-			}
+			e_udata->setStatusCode(500);
+			unregisterPipeWriteEvent(e_udata);
 		}
 		else if (wroteByte == 0)
 			return ;
@@ -147,18 +125,9 @@ void EventLoop::e_fileWriteCallback(struct kevent *e, Event *e_udata)
 
 		if (wroteByte == -1)
 		{
-			if (errno == EAGAIN)
-			{
-				return;
-			}
-			else
-			{
-				std::cerr<<"UNKNOWN ERROR"<<std::endl;
-				std::cerr<<"Errno: "<<errno<<std::endl;
-				e_udata->setStatusCode(500);
-				unregisterFileWriteEvent(e_udata);
-				registerFileWriteEvent(e_udata);
-			}
+			e_udata->setStatusCode(500);
+			unregisterFileWriteEvent(e_udata);
+			registerFileWriteEvent(e_udata);
 		}
 		else
 		{
